@@ -1,0 +1,4 @@
+{
+    "mongoURL": "mongodb://localhost:27017/abraham-chat",
+    "JWTKey": "12345678sdf"
+}
