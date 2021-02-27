@@ -26,6 +26,14 @@ mongoose.connect(url, {
     }
 });
 
+mongoose.connection.on('disconnected', () => {
+    console.log('Mongo has reconnected');
+})
+
+mongoose.connection.on('reconnected', () => {
+    console.log('Mongo connection is disconnected');
+})
+
 
 
 const user = mongoose.model('users', users);

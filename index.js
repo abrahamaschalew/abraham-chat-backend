@@ -1,12 +1,32 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const ws = require('ws');
 const morgan = require('morgan');
 const app = express();
 const mongo = require('./mongo');
 const jwt = require('./middlewares/jwt.middlewares');
 
+
+// Set up a headless websocket server that prints any
+// events that come in.
+const wsServer = new ws.Server({ noServer: true });
+wsServer.on('connection', socket => {
+  socket.on('message', message => {
+    wsServer.clients.forEach(function each(client) {
+        if (client !== socket && client.readyState === ws.OPEN) {
+          client.send(message);
+        }
+      });
+  });
+});
+
+
+
+
+
 // ROUTES
 const userRoute = require('./routes/user.routes');
+const messageRoute = require('./routes/message.routes');
 
 app.use(morgan('dev'));
 
@@ -19,65 +39,31 @@ app.use(bodyParser.json());
 // Json Web Token Middle ware
 app.use(jwt);
 
-app.use('/', userRoute);
 
-const port = process.env.PORT ||  5000;
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`)
+
+app.use('/', userRoute);
+app.use('/', messageRoute)
+
+/** catch 404 and forward to error handler */
+app.use('*', (req,res) => {
+    return res.status(404).json({
+        msg: "API endpoint doesn't exist"
+    })
 })
 
 
+const port = process.env.PORT ||  5000;
 
 
+// `server` is a vanilla Node.js HTTP server, so use
+// the same ws upgrade process described here:
+// https://www.npmjs.com/package/ws#multiple-servers-sharing-a-single-https-server
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// //initialize a simple http server
-// const server = http.createServer(app);
-
-// //initialize the WebSocket server instance
-// const wss = new WebSocket.Server({ server });
-
-// wss.on('connection', (ws) => {
-
-//     //connection is up, let's add a simple simple event
-//     ws.on('message', (message) => {
-
-//         //log the received message and send it back to the client
-//         console.log('received: %s', message);
-//         ws.send(`Hello, you sent -> ${message}`);
-//     });
-
-//     //send immediatly a feedback to the incoming connection    
-//     ws.send('Websocket connection is established');
-// });
-
-// //start our server
-// server.listen(process.env.PORT || 8999, () => {
-//     console.log(`Server started on port ${server.address().port} :)`);
-// });
+const server = app.listen(port, () => {
+    console.log(`Listening on port ${port}`)
+})
+server.on('upgrade', (request, socket, head) => {
+  wsServer.handleUpgrade(request, socket, head, socket => {
+    wsServer.emit('connection', socket, request);
+  });
+});
