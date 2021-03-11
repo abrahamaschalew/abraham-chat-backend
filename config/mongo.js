@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
-const users = require('./models/user.model')
-const config = require('./config/config.json');
+const users = require('../models/user.model')
+const messages = require('../models/message.model')
+const config = require('./config.json');
 
 
 const db = mongoose.connection;
@@ -37,5 +38,8 @@ mongoose.connection.on('reconnected', () => {
 
 
 const user = mongoose.model('users', users);
+const message = mongoose.model('messages', messages);
+
 
 exports.user = user;
+exports.message = message;

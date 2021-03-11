@@ -22,8 +22,13 @@ module.exports = (req, res, next) => {
 
     jwt.verify(req.token, config.JWTKey, (err, authData) => {
         if (err) return res.sendStatus(401);
-        req.session = { data: authData.session };
+        if (authData._id)
+            req.session = {
+                data: {
+                    _id: authData._id
+                }
+            };
+        else req.session = undefined;
         next();
-        //res.json({ authData });
     })
 }

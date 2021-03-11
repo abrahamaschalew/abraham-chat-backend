@@ -1,12 +1,11 @@
-const { validationResult } = require('express-validator');
-const mongo = require('../mongo');
-const config = require('../config/config.json');
+const mongo = require('../config/mongo');
 
 
-exports.sendMessage = (req,res) => {
-  // Finds the validation errors in this request and wraps them in an object with handy functions
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+
+
+exports.getMessage = (req, res) => {
+    // Get latest messages order by new messages
+    mongo.message.find({}, (err,result) => {
+        res.json(result);
+    })
 }

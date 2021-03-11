@@ -1,22 +1,11 @@
 const express = require('express');
-const route = express.Router();
+const router = express.Router();
+
+// Controller
+const messageController = require('../controllers/message.controller')
 
 
-const { body } = require('express-validator');
-
-// Controllers
-const message = require('../controllers/message.controller');
+router.get('/api/messages', messageController.getMessage);
 
 
-
-
-// api/message
-route.post('/api/message',
-  // password must be at least 5 chars long
-  body('message', "Message is required").exists(),
-  // username must be exist
-  body('type', 'Type is required').exists(),
-  message.sendMessage
-)
-
-module.exports = route;
+module.exports = router;

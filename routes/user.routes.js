@@ -12,9 +12,9 @@ const user = require('../controllers/user.controller')
 // api/register create new user account
 route.post('/api/register',
   // username must be an email
-  body('email').exists().isEmail(),
+  body('email', 'E-mail is required').exists(),
   // password must be at least 5 chars long
-  body('password').exists().isLength({ min: 5 }),
+  body('password').exists(),
   // username must be exist
   body('username', 'Username is required').exists(),
   user.register);
@@ -29,6 +29,9 @@ route.post('/api/login',
   body('username', 'Username is required').exists(),
   user.login
 )
+
+// api/is-auth
+route.get('/api/is-auth', user.isAuth)
 
 
 
