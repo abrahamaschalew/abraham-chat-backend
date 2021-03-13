@@ -4,8 +4,6 @@ const ws = require('ws');
 const morgan = require('morgan');
 const cors = require('cors');
 
-
-const mongo = require('./config/mongo');
 const jwt = require('./middlewares/jwt.middlewares');
 const WebSocket = require('./utils/webSocket');
 
@@ -18,15 +16,26 @@ app.use(cors());
 // Set up a headless websocket server that prints any
 // events that come in.
 const wsServer = new ws.Server({ noServer: true });
-wsServer.on('connection', (socket,request,client) => {
-  socket.id = Math.round(Math.random() * 5);
-  socket.on('message', message => {
-    wsServer.clients.forEach(function each(client) {
-      console.log(client.id);
-    });
-    let webSocketMessage = new WebSocket(wsServer.clients,socket,message);
+wsServer.on('connection', (socket, request, client) => {
+  socket.id = Math.round(Math.random() * 5000);
+  socket.send(JSON.stringify({ id: socket.id, type: "register" }));
 
+  socket.on('message', message => {
+    let webSocketMessage = new WebSocket(wsServer.clients, socket, message);
   });
+
+  socket.on('close', (reasonCode, description) => {
+    let onlineUsers = [];
+    wsServer.clients.forEach(function each(client) {
+      if (client.username != undefined)
+        onlineUsers.push(client.username)
+    })
+    wsServer.clients.forEach(function each(client) {
+      if (client.username != undefined) {
+        client.send(JSON.stringify({ type: "onlineUsers", users: onlineUsers }))
+      }
+    })
+  })
 });
 
 

@@ -26,15 +26,46 @@ module.exports = class WebSocket {
 
     // if the message has type
     if (this.message.type == "typing") {
-      this.clients.forEach(function each(client) {
-        client.send(message);
-      });
-      return;
+      verifyToken(this.message.token, (id) => {
+        if (id == undefined) return;
+        getUsernameById(id, (username) => {
+          const message = this.message;
+          message.token = "";
+          message.username = username;
+          this.clients.forEach(function each(client) {
+            client.send(JSON.stringify(message));
+          });
+        })
+      })
     }
+
+    if (this.message.type == "register_response") return this.onRegisterResponse();
 
     // if the message type is different from typing
     if (this.message.type == "message")
       return this.saveMessage();
+  }
+
+
+  onRegisterResponse() {
+    verifyToken(this.message.token, (id) => {
+      getUsernameById(id, (username) => {
+        this.socket.username = username;
+        // now the user is identifyed success fully let's notify to all new user is logged in.
+
+        let onlineUsers = [];
+
+        this.clients.forEach(function each(client) {
+          if (client.username != undefined)
+            onlineUsers.push(client.username)
+        })
+        this.clients.forEach(function each(client) {
+          if (client.username != undefined) {
+            client.send(JSON.stringify({ type: "onlineUsers", users: onlineUsers }))
+          }
+        })
+      })
+    })
   }
 
 
@@ -48,19 +79,17 @@ module.exports = class WebSocket {
 
     verifyToken(this.message.token, (id) => {
       if (id === undefined) return;
-      const newMessage = new mongo.message({
-        sender: id,
-        type: "Sent Message",
-        message: this.message.message
-      })
+      getUsernameById(id, (username) => {
+        const newMessage = new mongo.message({
+          sender: username,
+          type: "Sent Message",
+          message: this.message.message
+        })
 
-      newMessage.save((err, result) => {
-        if (err) return console.log(err);
-        mongo.user.find({ _id: id }, (err, result) => {
+        newMessage.save((err, result) => {
           if (err) return console.log(err);
-          if (result.length == 0) return;
           const message = this.message;
-          message.user = result[0].username;
+          message.user = username;
           message.token = "";
           this.clients.forEach(function each(client) {
             client.send(JSON.stringify(message));
@@ -77,13 +106,20 @@ function verifyToken(token, callback) {
   const bearer = token.split(' ');
   // Get token from array
   const bearerToken = bearer[1];
-  // Set the token
-  realToken = bearerToken;
 
-  jwt.verify(realToken, config.JWTKey, (err, authData) => {
+  jwt.verify(bearerToken, config.JWTKey, (err, authData) => {
     if (err) return console.log(err);
     if (authData._id)
       return callback(authData._id)
     else return callback(undefined);
+  })
+}
+
+
+function getUsernameById(id, callback) {
+  mongo.user.find({ _id: id }, (err, result) => {
+    if (err) return console.log(err);
+    if (result.length == 0) return;
+    callback(result[0].username);
   })
 }
