@@ -24,7 +24,6 @@ module.exports = class WebSocket {
     if (!this.message.type)
       return;
 
-    // if the message has type
     if (this.message.type == "typing") {
       verifyToken(this.message.token, (id) => {
         if (id == undefined) return;
@@ -41,7 +40,6 @@ module.exports = class WebSocket {
 
     if (this.message.type == "register_response") return this.onRegisterResponse();
 
-    // if the message type is different from typing
     if (this.message.type == "message")
       return this.saveMessage();
   }

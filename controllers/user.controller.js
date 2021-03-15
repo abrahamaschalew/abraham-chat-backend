@@ -54,7 +54,7 @@ exports.register = async (req, res) => {
               console.log(err);
               return res.status(501).json({ err });
             }
-            res.json({ msg: "Account created sucessfully", token })
+            res.json({ msg: "Account created successfully", token })
           })
         } else {
           return res.status(404).json({ msg: "Please check your username & password." });
@@ -92,7 +92,7 @@ exports.login = (req, res) => {
 }
 
 exports.isAuth = (req,res) => {
-  if (!req.session)
+  if (!req.session.data)
     return res.status(401).json({msg: "You are not logged in"});
   res.json({msg: "You are logged In"})
 }

@@ -28,7 +28,7 @@ module.exports = (req, res, next) => {
                     _id: authData._id
                 }
             };
-        else req.session = undefined;
+        else req.session = { data: false };
         next();
     })
 }
